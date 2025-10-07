@@ -1,6 +1,6 @@
 import json, os
 
-with open("datos.json", "r", encoding="utf-8") as f:
+with open("2.2\datos.json", "r", encoding="utf-8") as f:
     datos = json.load(f)
 
 autobuses = datos["AUTOBUSES"]   #Obtiene los datos del json de autbous y devulve la lista correspondiente ["a1","a2","a3","a4","a5"]
@@ -34,7 +34,7 @@ print("Generado instancia.dat")
 
 #Resuelve el glpk con os.system que es similar a escribir en la terminal el
 # contenido descrito en la variable "comando"
-comando = "glpsol --model primerMOD.txt --data instancia.dat -o solucion.txt"
+comando = "glpsol --model 2.2\primerMOD.mod --data instancia.dat -o solucion.txt"
 os.system(comando)
 
 print("GLPK ejecutado correctamente")
