@@ -25,8 +25,8 @@ for t in talleres:
 #Indicamos el final con un ;
 texto += ";\n"
 
-#Abrimos un archivo instancia,dat al que escribiremos todo el texto
-# genereado anteriormente
+#Abrimos un archivo instancia.dat al que escribiremos donde
+# escribiremos el texto generado en la variable anterior
 with open("instancia.dat", "w", encoding="utf-8") as f:
     f.write(texto)
 
