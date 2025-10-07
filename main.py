@@ -25,11 +25,11 @@ for t in talleres:
 # Empezamos a crear el contenido del .dat en texto
 texto = ""
 #Conjunto de talleres
-texto += "TALL := " + " ".join(talleres) + ";\n\n"
+texto += "set TALL := " + " ".join(talleres) + ";\n\n"
 #Conjunto de autobuses
-texto += "AUT:= " + " ".join(autobuses) + ";\n\n"
+texto += "set AUT:= " + " ".join(autobuses) + ";\n\n"
 # Matriz de distancias: filas=talleres, columnas=autobuses
-texto += "DIST : " + " ".join(autobuses) + " :=\n"
+texto += "param DIST : " + " ".join(autobuses) + " :=\n"
 
 for t in talleres:
    # Escribimos el nombre del taller
@@ -99,4 +99,4 @@ with open(ruta_salida, "w", encoding="utf-8") as f:
    f.write(texto)
 
 print("Fichero .dat generado correctamente:")
-print(ruta_salida.resolve())
+print(ruta_salida.resolve()) #Muestra la ruta de salida
