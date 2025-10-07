@@ -17,10 +17,10 @@ distancia = datos["DISTANCIA"]   # Diccionario: distancia["t1"]["a1"] = número
 # Si falta alguna distancia, lanzamos un mensaje de error.
 for t in talleres:
    if t not in distancia:
-       raise ValueError(f"Falta la fila del taller '{t}' dentro de 'DISTANCIA' en el JSON.")
+       raise ValueError("Falta la fila del taller '" + t + "' dentro de 'DISTANCIA' en el JSON.")
    for a in autobuses:
        if a not in distancia[t]:
-           raise ValueError(f"Falta la distancia para taller '{t}' y autobús '{a}' en 'DISTANCIA'.")
+           raise ValueError("Falta la distancia para taller '" + t + "' y autobús '" + a + "' en 'DISTANCIA'.")
 
 # Empezamos a crear el contenido del .dat en texto
 texto = ""
@@ -68,10 +68,10 @@ distancia = datos["DISTANCIA"]   # Diccionario: distancia["t1"]["a1"] = número
 # Si falta alguna distancia, lanzamos un mensaje de error.
 for t in talleres:
    if t not in distancia:
-       raise ValueError(f"Falta la fila del taller '{t}' dentro de 'DISTANCIA' en el JSON.")
+       raise ValueError("Falta la fila del taller '" + t + "' dentro de 'DISTANCIA' en el JSON.")
    for a in autobuses:
        if a not in distancia[t]:
-           raise ValueError(f"Falta la distancia para taller '{t}' y autobús '{a}' en 'DISTANCIA'.")
+           raise ValueError("Falta la distancia para taller '" + t + "' y autobús '" + a + "' en 'DISTANCIA'.")
 
 # Empezamos a crear el contenido del .dat en texto
 texto = ""
