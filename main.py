@@ -9,10 +9,10 @@ dist      = datos["DISTANCIA"]   # Obtiene los datos de diastancia del json dist
 
 #Creamos el texto que se encontrara dentro de nuestro .dat
 texto = ""
-texto += "set TALL := " + " ".join(talleres) + ";\n\n"#Añadimos a set TALL
-# la lista de talleres obtenida anteriormente del json
-texto += "set AUT := " + " ".join(autobuses) + ";\n\n"#Añadimos a set AUT
-# la lista de autobuses obtenida anteriormente del json
+texto += "data;\n\n"  # <<--- añadido al principio del fichero
+texto += "set TALL := " + " ".join(talleres) + ";\n\n"  # Añadimos a set TALL la lista de talleres obtenida anteriormente del json
+texto += "set AUT := " + " ".join(autobuses) + ";\n\n"  # Añadimos a set AUT la lista de autobuses obtenida anteriormente del json
+
 #Aqui realizamos un bucle para rellenar la matriz que representa todas las
 # diastancias pero primero añadimos la lista de autbous para representar las
 # columnas de la matriz y luego añadiremos las filas con los talleres
@@ -23,7 +23,7 @@ for t in talleres:
         linea += str(dist[t][a]) + " "
     texto += "  " + linea + "\n"
 #Indicamos el final con un ;
-texto += ";\n"
+texto += ";\n\nend;\n"  # <<--- añadido al final del fichero
 
 #Abrimos un archivo instancia.dat al que escribiremos donde
 # escribiremos el texto generado en la variable anterior
@@ -37,4 +37,4 @@ print("Generado instancia.dat")
 comando = "glpsol --model primerMOD.txt --data instancia.dat -o solucion.txt"
 os.system(comando)
 
-print("GLPK ejecutado")
+print("GLPK ejecutado correctamente")

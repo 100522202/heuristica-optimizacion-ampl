@@ -1,17 +1,17 @@
-set TALL; #Talleres
-set AUT; #Autobuses
+set TALL;  # Talleres
+set AUT;   # Autobuses
 
-param DIST{AUT,TALL}>=0; #Distancia desde el taller j al autbous i
+param DIST{TALL, AUT} >= 0;   # Distancia del taller t al autobús a
 
-var x{AUT,TALL} binary; #Ponemos binary para asegurar que sean 0 o 1
+var x{TALL, AUT} binary;      # x[t,a] ∈ {0,1}
 
 minimize DistanciaTotal:
-	sum{i in AUT, j in TALL} x[i,j]*DIST[i,j]
+    sum{t in TALL, a in AUT} x[t,a] * DIST[t,a];   # ← termina en ;
 
-s.t. Asigancion{i in AUT}:
-	sum{j in TALL} x[i,j]=1; #Cada autobús se asigan a un taller
+s.t. Asignacion{a in AUT}:
+    sum{t in TALL} x[t,a] = 1;     # Cada autobús se asigna a un taller
 
-s.t. Permiso{j in TALL}:
-	sum{i in AUT} x[i,j] <= 1; #Cada taller admite como mucho un autbous
+s.t. Permiso{t in TALL}:
+    sum{a in AUT} x[t,a] <= 1;     # Cada taller admite como mucho un autobús
 
-
+end;
