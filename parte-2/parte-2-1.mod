@@ -1,5 +1,3 @@
-# --- minperdidas.mod (adaptado a kd/kp y DIST 1D) ---
-
 set FRAN;
 set AUT;
 
