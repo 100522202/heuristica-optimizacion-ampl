@@ -28,13 +28,4 @@ s.t. Asignado{i in AUT}:
 s.t. MaximFranja{s in FRAN}:
     sum{i in AUT} x[i,s] <= 1;
 
-solve;
-
-#Salida de resultados para luego lo que nos piden en el script de la practica 
-for {i in AUT: a[i] > 0.5}
-    printf "Bus %s NO asignado (penalizacion = %g)\n", i, kp*PAS[i];
-
-for {i in AUT, s in FRAN: x[i,s] > 0.5}
-    printf "Bus %s -> Franja %s (coste = %g)\n", i, s, kd*DIST[i];
-
 end;

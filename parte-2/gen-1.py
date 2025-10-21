@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys
+import os, sys, re
 
 #Comprobamos argumentos
 if len(sys.argv) != 3:
@@ -8,8 +8,8 @@ if len(sys.argv) != 3:
 
 fichero_entrada = sys.argv[1]   # fichero de entrada
 fichero_salida_dat = sys.argv[2]  # fichero de sal
-fichero_salida_sol = "solucion221.txt"
-fichero_salida_compl = "salida_completa221.txt"  # captura toda la salida
+fichero_salida_sol = "parte-2/solucion221.txt"
+fichero_salida_compl = "parte-2/salida_completa221.txt"  # captura toda la salida
 
 # Leemos el fichero de entrada (texto plano)
 lineas = []
@@ -77,49 +77,50 @@ with open(fichero_salida_dat, "w", encoding="utf-8") as f:
 
 print("Generado " + fichero_salida_dat + " correctamente")
 
-# Ejecutamos GLPK (redirigiendo toda la salida)
-comando = f'glpsol --model 2.2.1\\minperdidas.mod --data "{fichero_salida_dat}" -o "{fichero_salida_sol}" > "{fichero_salida_compl}"'
+# Ejecutamos GLPK (redirigiendo toda la salida para en pantalla poder imprimir lo que nos obliga el enunciado)
+comando = f'glpsol --model parte-2\\minperdidas.mod --data "{fichero_salida_dat}" -o "{fichero_salida_sol}" > "{fichero_salida_compl}"'
 os.system(comando)
 
 print("GLPK ejecutado correctamente")
 
-# Leemos la salida completa
-Z = None
-rows = None
-cols = None
-lineas = []
+#
+Z = rows = cols = None
+asignaciones = []
+no_asignados = []
 
+#Leemos la salida estándar y mostramos por pantalla loque nos piden en el enunciado ---
 if os.path.exists(fichero_salida_sol):
     with open(fichero_salida_sol, "r", encoding="utf-8", errors="ignore") as f:
-        for fila in f:
-            s = fila.strip()
-            if s.startswith("Objective:"):
-                try:
-                    Z = float(s.split('=')[1].split()[0])
-                except:
-                    pass
-            if s.startswith("Rows:"):
-                try:
-                    rows = int(s.split()[1])
-                except:
-                    pass
-            if s.startswith("Columns:"):
-                try:
-                    cols = int(s.split()[1])
-                except:
-                    pass
+        for line in f:
+            line = line.strip()
 
-if os.path.exists(fichero_salida_compl):
-    with open(fichero_salida_compl, "r", encoding="utf-8", errors="ignore") as f:
-        for fila in f:
-            s = fila.strip()
-            if s.startswith("Bus "):
-                lineas.append(s)
+            # Extraer los datos
+            if line.startswith("Objective:"):
+                m = re.search(r"=\s*([\d\.]+)", line)
+                if m: Z = float(m.group(1))
+            elif line.startswith("Rows:"):
+                m = re.search(r"(\d+)", line)
+                if m: rows = int(m.group(1))
+            elif line.startswith("Columns:"):
+                m = re.search(r"(\d+)", line)
+                if m: cols = int(m.group(1))
 
-# Mostramos resultados
-print("Z* =", Z if Z is not None else "NA",
-      ", variables =", cols if cols is not None else "NA",
-      ", restricciones =", rows if rows is not None else "NA")
+            # Extraer asignaciones
+            m_x = re.match(r".*x\[(\w+),(\w+)\]\s+\*?\s*(\d+)", line)
+            if m_x and m_x.group(3) == "1":
+                asignaciones.append((m_x.group(1), m_x.group(2)))
 
-for l in lineas:
-    print(l)
+            m_a = re.match(r".*a\[(\w+)\]\s+\*?\s*(\d+)", line)
+            if m_a and m_a.group(2) == "1":
+                no_asignados.append(m_a.group(1))
+
+#Mostramos los resultados
+print(f"Z* = {Z if Z is not None else 'NA'} , variables = {cols if cols is not None else 'NA'} , restricciones = {rows if rows is not None else 'NA'}")
+
+#Buses asignados
+print("\nAsignaciones\n")
+for bus, franja in asignaciones:
+    print(f"{bus} → {franja}")
+
+for bus in no_asignados:
+    print(f"{bus} → sin asignar")
