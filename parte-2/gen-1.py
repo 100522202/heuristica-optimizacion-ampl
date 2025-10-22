@@ -1,75 +1,43 @@
 #!env python
-import os, sys, re
+import os, sys, re, subprocess
 
-#Comprobamos argumentos
+# Comprobamos argumentos
 if len(sys.argv) != 3:
     print("Uso: ./gen-1.py <fichero-entrada> <fichero-datos>")
     sys.exit(1)
 
-fichero_entrada = sys.argv[1]   # fichero de entrada
-fichero_salida_dat = sys.argv[2]  # fichero .dat
-fichero_salida_sol = "solucion221.txt"
-fichero_salida_compl = "salida_completa221.txt"  # captura toda la salida
+fichero_entrada = sys.argv[1]       # fichero de entrada (.in)
+fichero_salida_dat = sys.argv[2]    # fichero .dat
+fichero_salida_sol = "solucion221.txt"          # salida de GLPK con --output
 
-# Leemos el fichero de entrada (texto plano)
-lineas = []
+# Leemos el fichero de entrada
 with open(fichero_entrada, "r", encoding="utf-8") as f:
-    for linea in f:
-        linea = linea.strip()
-        if linea != "":
-            lineas.append(linea)
+    lineas = [l.strip() for l in f if l.strip() != ""]
 
-# Procesamos las líneas según el formato del enunciado
-primera = lineas[0].split()
-n = int(primera[0])   # número de franjas
-m = int(primera[1])   # número de autobuses
+n, m = map(int, lineas[0].split())
+kd, kp = map(float, lineas[1].split())
+d = list(map(float, lineas[2].split()))
+p = list(map(float, lineas[3].split()))
 
-segunda = lineas[1].split()
-kd = float(segunda[0])  # euros/km
-kp = float(segunda[1])  # penalización/pasajero
+# Creamos listas de nombres
+autobuses = [f"a{i+1}" for i in range(m)]
+franjas = [f"s{j+1}" for j in range(n)]
 
-tercera = lineas[2].split()
-d = []
-for valor in tercera:
-    d.append(float(valor))
-
-cuarta = lineas[3].split()
-p = []
-for valor in cuarta:
-    p.append(float(valor))
-
-#Creamos listas de nombres de autobuses y franjas
-autobuses = []
-for i in range(m):
-    autobuses.append("a" + str(i + 1))
-
-franjas = []
-for j in range(n):
-    franjas.append("s" + str(j + 1))
-
-#Creamos el texto que se encontrara dentro de nuestro .dat
-texto = ""
-texto += "data;\n\n"
+# Generamos el contenido del fichero .dat
+texto  = "data;\n\n"
 texto += "set AUT := " + " ".join(autobuses) + ";\n\n"
 texto += "set FRAN := " + " ".join(franjas) + ";\n\n"
+texto += f"param kd := {kd};\nparam kp := {kp};\n\n"
 
-# kd y kp son constantes globales
-texto += "param kd := " + str(kd) + ";\n"
-texto += "param kp := " + str(kp) + ";\n\n"
-
-# Distancias
 texto += "param DIST :=\n"
 for i in range(m):
-    texto += autobuses[i] + " " + str(d[i]) + "\n"
+    texto += f"{autobuses[i]} {d[i]}\n"
 texto += ";\n\n"
 
-# Pasajeros
 texto += "param PAS :=\n"
 for i in range(m):
-    texto += autobuses[i] + " " + str(p[i]) + "\n"
-texto += ";\n\n"
-
-texto += "end;\n"
+    texto += f"{autobuses[i]} {p[i]}\n"
+texto += ";\n\nend;\n"
 
 # Guardamos el .dat
 with open(fichero_salida_dat, "w", encoding="utf-8") as f:
@@ -77,94 +45,77 @@ with open(fichero_salida_dat, "w", encoding="utf-8") as f:
 
 print("Generado " + fichero_salida_dat + " correctamente")
 
-# Ejecutamos GLPK (redirigiendo toda la salida para en pantalla poder imprimir lo que nos obliga el enunciado)
-comando = f'glpsol --model "parte-2-1.mod" --data "{fichero_salida_dat}" -o "{fichero_salida_sol}" > "{fichero_salida_compl}"'
-os.system(comando)
+# Ejecutamos GLPK y redirigimos su salida a un fichero
 
-print("GLPK ejecutado correctamente")
+resultado_glpk = subprocess.run(
+    ["glpsol", "--model", "parte-2-1.mod", "--data", fichero_salida_dat, "--output", fichero_salida_sol],
+    capture_output=True, text=True
+)
 
+# Analizamos la salida estándar para ver si el modelo es infactible
+es_infactible = bool(re.search(r"INFEASIBLE|INTEGER\s+EMPTY", resultado_glpk.stdout, re.IGNORECASE))
 
-#Inicializamos variables para guardar los datos del resultado
-Z = None                # valor de la función objetivo
-rows = None             # número de restricciones
-cols = None             # número de variables
-status = None           # estado del modelo (OPTIMAL, INFEASIBLE, etc.)
-infeasible = False      # indicador de si el modelo es infactible
-asignaciones = []       # lista con las asignaciones encontradas
-no_asignados = []
+# Inicializamos variables
+valor_objetivo = None
+num_restricciones = None
+num_variables = None
+autobuses_asignados = set()
+autobuses_no_asignados = set()
 
-#Comprobamos que existe el fichero de la solución
+# Detectar infactibilidad desde stdout
+if re.search(r"INFEASIBLE|INTEGER\s+EMPTY", resultado_glpk.stdout, re.IGNORECASE):
+    es_infactible = True
+
+# Analizamos el fichero de salida generado por GLPK
 if os.path.exists(fichero_salida_sol):
+    with open(fichero_salida_sol, "r", encoding="utf-8", errors="ignore") as archivo_salida:
+        contenido_salida = archivo_salida.read()
 
-    #Abrimos el archivo de solución en modo lectura
-    with open(fichero_salida_sol, "r", encoding="utf-8", errors="ignore") as f:
-        for line in f:
-            line = line.strip()  # quitamos espacios a los lados
+    # Capturamos valores principales
+    match_objetivo = re.search(r"Objective:\s+.+?=\s*([-+]?\d+(?:\.\d+)?)", contenido_salida)
+    match_filas = re.search(r"Rows:\s+(\d+)", contenido_salida)
+    match_columnas = re.search(r"Columns:\s+(\d+)", contenido_salida)
 
-            #Comprobamos el estado general del modelo (factible o no)
-            if line.startswith("Status:"):
-                partes = line.split(":")
-                if len(partes) > 1:
-                    status = partes[1].strip().upper()
-                    if "INFEASIBLE" in status or "INTEGER EMPTY" in status:
-                        infeasible = True
+    if match_objetivo:
+        valor_objetivo = float(match_objetivo.group(1))
+    if match_filas:
+        num_restricciones = int(match_filas.group(1))
+    if match_columnas:
+        num_variables = int(match_columnas.group(1))
 
-            #Por si el texto de infactibilidad aparece en otra línea
-            elif "INFEASIBLE" in line.upper() or "INTEGER EMPTY" in line.upper():
-                infeasible = True
+    # Autobuses asignados: líneas tipo  x[a3,s1]  *  1 ...
+    for match in re.finditer(r"x\[\s*(\w+)\s*,\s*(\w+)\s*\]\s+\*?\s*([0-9]+)", contenido_salida):
+        autobus, franja, valor = match.groups()
+        if autobus.startswith("a") and valor == "1":
+            autobuses_asignados.add(autobus)
 
-            #Leemos el valor de la función objetivo (Z)
-            elif line.startswith("Objective:"):
-                partes = line.split("=")
-                if len(partes) > 1:
-                    try:
-                        # Primer número después del signo "="
-                        Z = float(partes[1].split()[0])
-                    except:
-                        Z = None
+    # Autobuses no asignados: líneas tipo  a[a4]  *  1 ...
+    for match in re.finditer(r"a\[\s*(\w+)\s*\]\s+\*?\s*([0-9]+)", contenido_salida):
+        autobus, valor = match.groups()
+        if autobus.startswith("a") and valor == "1":
+            autobuses_no_asignados.add(autobus)
 
-            #Leemos el número total de restricciones (Rows)
-            elif line.startswith("Rows:"):
-                partes = line.split()
-                if len(partes) > 1:
-                    try:
-                        rows = int(partes[1])
-                    except:
-                        rows = None
+# Mostramos resultados por pantalla
+if es_infactible:
+    print("El modelo es infactible, no existen asignaciones válidas.\n")
+else:
+    print(f"Z* = {valor_objetivo if valor_objetivo is not None else 'NA'} , "
+          f"variables = {num_variables if num_variables is not None else 'NA'} , "
+          f"restricciones = {num_restricciones if num_restricciones is not None else 'NA'}\n")
 
-            #Leemos el número total de variables (Columns)
-            elif line.startswith("Columns:"):
-                partes = line.split()
-                if len(partes) > 1:
-                    try:
-                        cols = int(partes[1])
-                    except:
-                        cols = None
+    print("Autobuses asignados:\n")
+    if autobuses_asignados:
+        for autobus in sorted(autobuses_asignados):
+            print(autobus)
+    else:
+        print("(No se encontraron autobuses asignados)")
 
-            #Buscamos las asignaciones x[a,t,f] que valen 1
-            coinc_x = re.match(r".*x\[(\w+),(\w+)\]\s+\*?\s*([0-9]+)", line)
-            if coinc_x:
-                valor = coinc_x.group(3)
-                if valor == "1":
-                    a_nombre = coinc_x.group(1)
-                    f_nombre = coinc_x.group(2)
-                    asignaciones.append((a_nombre, f_nombre))
+    # Autobuses sin asignar = explícitos + los que no aparecen en asignados
+    autobuses_sin_asignar = sorted(autobuses_no_asignados | (set(autobuses) - autobuses_asignados))
+    if autobuses_sin_asignar:
+        print("\nAutobuses sin asignar:\n")
+        for autobus in autobuses_sin_asignar:
+            print(autobus)
 
-            #la variable a[i] es 1 si el autobús i-ésimo no está asignado
-            coinc_a = re.match(r".*a\[(\w+)\]\s+\*?\s*([0-9]+)", line)
-            if coinc_a:
-                valor_a = coinc_a.group(2)
-                if valor_a == "1":
-                    no_asignados.append(coinc_a.group(1))
-
-#Mostramos resutlados por pantalla, este modelo nunca puede ser infactible por cómo esta modelado
-
-print(f"\nZ* = {Z if Z is not None else 'NA'} , variables = {cols if cols is not None else 'NA'} , restricciones = {rows if rows is not None else 'NA'}\n")
-print("Asignaciones óptimas:\n")
-if len(asignaciones) > 0:
-    for a_nombre, f_nombre in asignaciones:
-        print(a_nombre, "asignado a", f_nombre)
-if len(no_asignados) > 0:
-    print("\nAutobuses sin asignar:\n")
-    for a_nombre in no_asignados:
-        print(a_nombre, "sin asignar")
+# Eliminamos el fichero temporal de salida
+os.remove(fichero_salida_sol)

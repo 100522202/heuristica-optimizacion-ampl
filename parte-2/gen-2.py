@@ -3,13 +3,13 @@ import os, sys, re
 
 #Comprobamos argumentos
 if len(sys.argv) != 3:
-    print("Uso: ./gen-1.py <fichero-entrada> <fichero-datos>")
+    print("Uso: ./gen-2.py <fichero-entrada> <fichero-datos>")
     sys.exit(1)
 
 fichero_entrada = sys.argv[1]   # fichero de entrada
 fichero_salida_dat = sys.argv[2]  # fichero .dat
-fichero_salida_sol = "parte-2/solucion222.txt"
-fichero_salida_compl = "parte-2/salida_completa222.txt"  # captura toda la salida
+fichero_salida_sol = "solucion222.txt"
+fichero_salida_compl = "salida_completa222.txt"  # captura toda la salida
 
 # Leemos el fichero de entrada que está en texto plano
 #Eliminamos huecos en blanco si los hubiera
@@ -101,7 +101,7 @@ with open(fichero_salida_dat, "w", encoding="utf-8") as f:
 
 
 # Ejecutamos GLPK (redirigiendo toda la salida para en pantalla poder imprimir lo que nos obliga el enunciado)
-comando = f'glpsol --model parte-2\\parte-2-2.mod --data "{fichero_salida_dat}" -o "{fichero_salida_sol}" > "{fichero_salida_compl}"'
+comando = f'glpsol --model "parte-2-2.mod" --data "{fichero_salida_dat}" -o "{fichero_salida_sol}" > "{fichero_salida_compl}"'
 os.system(comando)
 
 print("GLPK ejecutado correctamente")
