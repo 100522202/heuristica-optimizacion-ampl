@@ -1,0 +1,37 @@
+GLPSOL: GLPK LP/MIP Solver, v4.65
+Parameter(s) specified in the command line:
+ --model parte-2-1.mod --data ../ejemplo.dat -o solucion221.txt
+Reading model section from parte-2-1.mod...
+29 lines were read
+Reading data section from ../ejemplo.dat...
+24 lines were read
+Generating Perdidas...
+Generating Asignado...
+Generating MaximFranja...
+Model has been successfully generated
+GLPK Integer Optimizer, v4.65
+8 rows, 16 columns, 44 non-zeros
+16 integer variables, all of which are binary
+Preprocessing...
+7 rows, 16 columns, 28 non-zeros
+16 integer variables, all of which are binary
+Scaling...
+ A: min|aij| =  1.000e+00  max|aij| =  1.000e+00  ratio =  1.000e+00
+Problem data seem to be well scaled
+Constructing initial basis...
+Size of triangular part is 7
+Solving LP relaxation...
+GLPK Simplex Optimizer, v4.65
+7 rows, 16 columns, 28 non-zeros
+*     0: obj =   2.300000000e+02 inf =   0.000e+00 (12)
+*     9: obj =   5.650000000e+01 inf =   0.000e+00 (0)
+OPTIMAL LP SOLUTION FOUND
+Integer optimization begins...
+Long-step dual simplex will be used
++     9: mip =     not found yet >=              -inf        (1; 0)
++     9: >>>>>   5.650000000e+01 >=   5.650000000e+01   0.0% (1; 0)
++     9: mip =   5.650000000e+01 >=     tree is empty   0.0% (0; 1)
+INTEGER OPTIMAL SOLUTION FOUND
+Time used:   0.0 secs
+Memory used: 0.1 Mb (151084 bytes)
+Writing MIP solution to 'solucion221.txt'...

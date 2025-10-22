@@ -1,3 +1,4 @@
+#!env python
 import os, sys, re
 
 #Comprobamos argumentos
