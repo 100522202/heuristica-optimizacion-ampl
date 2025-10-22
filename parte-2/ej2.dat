@@ -1,0 +1,19 @@
+data;
+
+set AUT := a1 a2 a3;
+
+set TALL := t1;
+
+set FRAN := s1;
+
+param CIJ : a1 a2 a3 :=
+ a1 0 10 1 
+ a2 10 0 1 
+ a3 1 1 0 
+;
+
+param OIJ : t1 :=
+ s1 1 
+;
+
+end;
