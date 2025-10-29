@@ -2,44 +2,39 @@ set TALL;   # Talleres
 set AUT;    # Autobuses
 set FRAN;   # Franjas
 
-param CIJ{AUT,AUT} >=0;             # Pasajeros que usan los autbouses i y j
-param OIJ{FRAN, TALL} binary;       # indica si la combinación (franja, taller) está disponible
+param CIJ{AUT,AUT} >= 0;      # Pasajeros en común entre autobuses i y j
+param OIJ{FRAN,TALL} binary;  # 1 si la franja f está disponible en el taller t
 
-var x{AUT, TALL, FRAN} binary;      # 1 si el bus i se asigna a la franja f del taller t
+# Variable: 1 si el bus i va al taller t en la franja f
+# Solo se crean para combinaciones válidas (OIJ=1)
+var x{i in AUT, t in TALL, f in FRAN: OIJ[f,t]=1} binary;
 
-# Variable binaria que indica si dos autobuses coinciden en la misma franja
-# Se definen para i < j para evitar duplicados (y[i,j,f] = y[j,i,f])
-var y{ i in AUT, j in AUT, f in FRAN : i < j } binary;
+# Variable: 1 si los autobuses i y j coinciden en la misma franja f
+var y{i in AUT, j in AUT, f in FRAN: i < j} binary;
 
-# Objetivo: minimizar el número de usuarios asignados a la misma franja en talleres distintos
+# ----- FUNCIÓN OBJETIVO -----
 minimize Impacto:
-    sum{ i in AUT, j in AUT, f in FRAN : i < j } CIJ[i,j] * y[i,j,f];
+    sum{i in AUT, j in AUT, f in FRAN: i < j} CIJ[i,j] * y[i,j,f];
 
-# Cada autobús debe ser asignado a un único taller y una única franja
-s.t. AsignacionUnica1{i in AUT}:
-    sum{t in TALL, f in FRAN} x[i,t,f] = 1;
+# ----- RESTRICCIONES -----
 
-# Cada par (taller, franja) solo admite como máximo un autobús
-s.t. AsignacionUnica2{t in TALL, f in FRAN}:
+# 1. Cada autobús se asigna a un único taller y franja
+s.t. UnicoPorBus{i in AUT}:
+    sum{t in TALL, f in FRAN: OIJ[f,t]=1} x[i,t,f] = 1;
+
+# 2. Cada taller y franja puede tener como máximo un autobús
+s.t. CapacidadTaller{t in TALL, f in FRAN: OIJ[f,t]=1}:
     sum{i in AUT} x[i,t,f] <= 1;
 
-# El autobús solo puede asignarse a combinaciones (franja, taller) disponibles
-s.t. AsignacionUnica3{i in AUT, t in TALL, f in FRAN}:
-    x[i,t,f] <= OIJ[f,t];
+# 3. Definir coincidencia en franja (y)
+s.t. Y1{i in AUT, j in AUT, f in FRAN: i < j}:
+    y[i,j,f] <= sum{t in TALL: OIJ[f,t]=1} x[i,t,f];
 
-# Restricciones para establecer "y" en 1 cuando dos autobuses coinciden
+s.t. Y2{i in AUT, j in AUT, f in FRAN: i < j}:
+    y[i,j,f] <= sum{t in TALL: OIJ[f,t]=1} x[j,t,f];
 
-# Restricción 1: si el autobús i NO está asignado a la franja f, entonces y[i,j,f] debe ser 0
-s.t. restriccion1{i in AUT, j in AUT, f in FRAN : i < j}:
-    y[i,j,f] <= sum{t in TALL} x[i,t,f];
-
-# Restricción 2: si el autobús j NO está asignado a la franja f, entonces y[i,j,f] debe ser 0
-s.t. restriccion2{i in AUT, j in AUT, f in FRAN : i < j}:
-    y[i,j,f] <= sum{t in TALL} x[j,t,f];
-
-# Restricción 3: si ambos autobuses están asignados a la franja f (en cualquier taller),
-# entonces y[i,j,f] se fuerza a 1
-s.t. restriccion3{i in AUT, j in AUT, f in FRAN : i < j}:
-    y[i,j,f] >= sum{t in TALL} x[i,t,f] + sum{t in TALL} x[j,t,f] - 1;
+s.t. Y3{i in AUT, j in AUT, f in FRAN: i < j}:
+    y[i,j,f] >= sum{t in TALL: OIJ[f,t]=1} x[i,t,f]
+              + sum{t in TALL: OIJ[f,t]=1} x[j,t,f] - 1;
 
 end;
