@@ -1,4 +1,4 @@
-#!env python3
+#!/usr/bin/env python3
 import os, sys, re, subprocess
 
 #Comprobamos argumentos
