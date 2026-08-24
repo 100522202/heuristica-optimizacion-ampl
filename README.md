@@ -4,7 +4,7 @@ Práctica 1 de la asignatura **Heurística y Optimización (UC3M)**.
 
 ---
 
-## 📌 Descripción
+## Descripción
 
 Formulación y resolución de problemas de **Programación Lineal (PL)** y **Programación Entera Mixta (MIP)** utilizando el lenguaje de modelado algebraico **AMPL** y solvers de optimización (**GLPK / CPLEX**).
 
@@ -15,7 +15,7 @@ El proyecto incluye:
 
 ---
 
-## 🛠️ Uso con AMPL
+## Uso con AMPL
 
 ```bash
 ampl
